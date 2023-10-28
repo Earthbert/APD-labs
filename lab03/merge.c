@@ -2,19 +2,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <math.h>
-
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-
 int N;
 int P;
 int *v;
 int *vQSort;
 int *vNew;
-
-int *start;
-int *mid;
-int *end;
 pthread_barrier_t barrier;
+pthread_mutex_t mutex;
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 void merge(int *source, int start, int mid, int end, int *destination) {
 	int iA = start;
@@ -57,12 +52,13 @@ void display_vector(int *v) {
 }
 
 int cmp(const void *a, const void *b) {
-	int A = *(int *)a;
-	int B = *(int *)b;
+	int A = *(int*)a;
+	int B = *(int*)b;
 	return A - B;
 }
 
-int is_power_of_two(int n) {
+int is_power_of_two(int n)
+{
 	if (n == 0) {
 		return 0;
 	}
@@ -70,8 +66,9 @@ int is_power_of_two(int n) {
 	return (ceil(log2(n)) == floor(log2(n)));
 }
 
-void get_args(int argc, char **argv) {
-	if (argc < 3) {
+void get_args(int argc, char **argv)
+{
+	if(argc < 3) {
 		printf("Numar insuficient de parametri: ./merge N P (N trebuie sa fie putere a lui 2)\n");
 		exit(1);
 	}
@@ -85,7 +82,8 @@ void get_args(int argc, char **argv) {
 	P = atoi(argv[2]);
 }
 
-void init() {
+void init()
+{
 	int i;
 	v = malloc(sizeof(int) * N);
 	vQSort = malloc(sizeof(int) * N);
@@ -103,7 +101,8 @@ void init() {
 }
 
 
-void print() {
+void print()
+{
 	printf("v:\n");
 	display_vector(v);
 	printf("vQSort:\n");
@@ -111,36 +110,54 @@ void print() {
 	compare_vectors(v, vQSort);
 }
 
-void *thread_function(void *arg) {
+void *thread_function(void *arg)
+{
 	int thread_id = *(int *)arg;
 
-	int start = thread_id * (double)N / P;
-	int end = MIN((thread_id + 1) * (double)N / P, N);
+	// implementati aici merge sort paralel
+	int width;
+	// am 8 intervale si 2 thread-uri -> fiecare primeste primele 4 intervale
+	// am width si N => N / width = nr intervale
+	// si am nr de threads P, deci fiecare thread va primi un nr de intervale
 
-	// merge sort clasic - trebuie paralelizat
-	int width, *aux;
-	for (width = 1; width < N; width = 2 * width) {
-		for (int i = start; i < end; i = i + 2 * width) {
-			printf("T%d: i - %d width %d\n", thread_id, i, width);
-			if (i + 2 * width <= N)
-				merge(v, i, i + width, MIN(i + 2 * width, N), vNew);
+	for (width = 2; width <= N; width = 2 * width) {
+		int nr_intervals = N / width;
+
+		int start_interval;
+		int end_interval = MIN((thread_id + 1) * (double)nr_intervals / P, nr_intervals);
+		if (nr_intervals >= P) {
+			start_interval = thread_id * (double)nr_intervals / P;
+			end_interval = MIN((thread_id + 1) * (double)nr_intervals / P, nr_intervals);
+		} else {
+			for (int i = 0; i < nr_intervals; i++) {
+				if (thread_id == i) {
+					start_interval = i;
+					end_interval = i + 1;
+					break;
+				} else {
+					start_interval = -1;
+					end_interval = -1;
+				}
+			}
 		}
-
-		pthread_barrier_wait(&barrier);
-
-		if (thread_id == 0) {
-			aux = v;
-			v = vNew;
-			vNew = aux;
+		int start = start_interval * width;
+		int end = end_interval * width;
+		
+		for (int i = start; i < end; i = i + width) {
+			merge(v, i, i + width / 2, i + width, vNew);
+		}
+		
+		for (int i = start; i < end; i++) {
+			v[i] = vNew[i];
 		}
 		pthread_barrier_wait(&barrier);
 
 	}
-
 	pthread_exit(NULL);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	get_args(argc, argv);
 	init();
 
@@ -148,14 +165,12 @@ int main(int argc, char *argv[]) {
 	int thread_id[P];
 	pthread_t tid[P];
 
-	pthread_barrier_init(&barrier, NULL, P);
-
 	// se sorteaza vectorul etalon
 	for (i = 0; i < N; i++)
 		vQSort[i] = v[i];
-
 	qsort(vQSort, N, sizeof(int), cmp);
-
+	pthread_barrier_init(&barrier, NULL, P);
+	pthread_mutex_init(&mutex, NULL);
 	// se creeaza thread-urile
 	for (i = 0; i < P; i++) {
 		thread_id[i] = i;
@@ -168,16 +183,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// merge sort clasic - trebuie paralelizat
-	int width, *aux;
-	for (width = 1; width < N; width = 2 * width) {
-		for (i = 0; i < N; i = i + 2 * width) {
-			merge(v, i, i + width, i + 2 * width, vNew);
-		}
 
-		aux = v;
-		v = vNew;
-		vNew = aux;
-	}
 
 	print();
 
