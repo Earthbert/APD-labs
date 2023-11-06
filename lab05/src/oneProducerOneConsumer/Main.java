@@ -1,0 +1,35 @@
+package oneProducerOneConsumer;
+
+import java.util.concurrent.Semaphore;
+
+/**
+ * DO NOT MODIFY
+ */
+public class Main {
+    public static final int N = 1000000;
+    public static Semaphore s1;
+    public static Semaphore s2;
+
+    public static void main(String[] args) {
+        Buffer buffer = new Buffer();
+        s1 = new Semaphore(1);
+        s2 = new Semaphore(0);
+
+        Thread[] threads = new Thread[2];
+        threads[0] = new Thread(new Producer(buffer));
+        threads[1] = new Thread(new Consumer(buffer));
+
+        for (int i = 0; i < 2; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < 2; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+}
+/* DO NOT MODIFY */

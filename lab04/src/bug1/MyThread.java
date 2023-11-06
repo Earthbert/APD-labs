@@ -6,7 +6,7 @@ package bug1;
  * DO NOT MODIFY
  */
 public class MyThread implements Runnable {
-    public static int value = 0;
+    public static volatile int value = 0;
 
     @Override
     public void run() {

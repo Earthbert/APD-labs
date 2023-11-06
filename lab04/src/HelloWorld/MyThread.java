@@ -12,7 +12,7 @@ public class MyThread extends Thread{
 
 	@Override
 	public void run() {
-		System.err.println("Hello from thread" + threadId);
+		System.out.println("Hello from thread" + threadId);
 		super.run();
 	}
 }

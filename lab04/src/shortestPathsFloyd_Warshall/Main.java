@@ -2,14 +2,15 @@ package shortestPathsFloyd_Warshall;
 
 import java.util.Random;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static Integer NEG_INF = Integer.MAX_VALUE >> 1;
 
     public static void main(String[] args) {
         int M = 9;
-        int P = 3;
-        int length = 10;
+        int P = 5;
+        int length = 2000;
         int[][] graphSeq = new int[length][length];
         int[][] graphPar = new int[length][length];
         CyclicBarrier barrier = new CyclicBarrier(P);
@@ -31,6 +32,7 @@ public class Main {
             }
         }
 
+        long startTime = System.nanoTime();
         // Parallelize me (You might want to keep the original code in order to compare)
         for (int k = 0; k < graphSeq.length; k++) {
             for (int i = 0; i < graphSeq.length; i++) {
@@ -40,6 +42,10 @@ public class Main {
             }
         }
 
+        long endTime = System.nanoTime();
+        System.out.println("Sequential time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime));
+
+        startTime = System.nanoTime();
         Thread[] threads = new Thread[P];
 
         for (int i = 0; i < P; i++) {
@@ -53,6 +59,9 @@ public class Main {
                 e.printStackTrace();
             }
         }
+
+        endTime = System.nanoTime();
+        System.out.println("Parallel time: " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime));
 
         Boolean equal = true;
         for (int i = 0; i < graphPar.length; i++) {
