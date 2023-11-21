@@ -16,7 +16,7 @@ public class Main {
         ArrayList<Integer> partialPath = new ArrayList<>();
         // se vor calcula toate caile de la nodul 0 la nodul 3 in cadrul grafului
         partialPath.add(0);
-        ExecutorService executorService = Executors.newFixedThreadPool(8);
+        ExecutorService executorService = Executors.newFixedThreadPool(800000000);
 
         inPool.incrementAndGet();
         executorService.submit(new ComputeRouteTask(graph, partialPath, 3, executorService, inPool));

@@ -9,7 +9,6 @@ public class Main {
         int[] graph = new int[N];
         ForkJoinPool pool = new ForkJoinPool(8);
         pool.invoke(new QueensRecursiveTask(graph, 0));
-        pool.shutdown();
         pool.close();
     }
 }
