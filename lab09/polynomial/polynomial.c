@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 	if (rank == MASTER) { // This code is run by a single process
 		int polynomialSize, n;
-		int x = 5; // valoarea cu care se calculeaza polinomul - f(5)
+		int x = 1; // valoarea cu care se calculeaza polinomul - f(5)
 
 		/*
 			in fisierul de intrare formatul este urmatorul:
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 		*/
 		MPI_Recv(&x, 1, MPI_FLOAT, MASTER, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		MPI_Recv(&p, 1, mpi_polynomial, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		p.sum += pow(p.val, x);
+		p.sum += x * pow(p.val, rank);
 
 		if (rank == polynomialSize - 1) {
 			printf("Polynom value is %f\n", p.sum);
