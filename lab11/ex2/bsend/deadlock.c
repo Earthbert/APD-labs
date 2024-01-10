@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
         MPI_Recv(&num1, SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
+    MPI_Buffer_detach(&mpi_send_buffer, &len);
     MPI_Finalize();
 
 }
